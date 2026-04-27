@@ -19,7 +19,7 @@ public class LevelManager {
 
     private static Level level1() {
         Piece[] pieces = {
-            new SmallSnowball(0, 0),
+            new SmallSnowball(0, 1),
             new SnowmanHead(3, 0),
             new LargeSnowball(3, 4)
         };

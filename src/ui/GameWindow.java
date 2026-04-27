@@ -14,5 +14,6 @@ public class GameWindow extends JFrame {
         GamePanel panel = new GamePanel(controller);
         add(panel);
         pack();
+        setLocationRelativeTo(null);
     }
 }
