@@ -12,6 +12,7 @@ public class GameBoard {
 
     public void loadLevel(Level level) {
         grid = new Piece[ROWS][COLS];
+        anyStacked = false;
         for (Piece piece : level.getPieces()) {
             grid[piece.getRow()][piece.getCol()] = piece;
         }
@@ -38,13 +39,14 @@ public class GameBoard {
     }
 
     public boolean movePiece(Piece piece, int dRow, int dCol) {
-        if (piece.getType() == PieceType.SNOWMAN_HEAD) return true;
-        if (piece.getType() == PieceType.TREE) return true;
-        if (piece instanceof LargeSnowball && ((LargeSnowball) piece).hasSmallOnTop()) return true;
+
+        if (piece.getType() == PieceType.TREE) return false;
+
         if (piece instanceof SmallSnowball && ((SmallSnowball) piece).isStacked()) return true;
 
         int currentRow = piece.getRow();
         int currentCol = piece.getCol();
+
         int nextRow = currentRow + dRow;
         int nextCol = currentCol + dCol;
 
@@ -54,8 +56,43 @@ public class GameBoard {
         }
 
         if (!isValid(nextRow, nextCol)) {
+            if (piece instanceof SmallSnowball ss) {
+                ss.setStacked(false);
+            }
+
+            if (piece instanceof LargeSnowball ls) {
+                ls.setSmallOnTop(false);
+                ls.setHasHeadOnTop(false);
+            }
+
             grid[currentRow][currentCol] = null;
+
             return false;
+        }
+
+        Piece target = grid[nextRow][nextCol];
+
+        // Small to Large stacking
+        if (piece instanceof SmallSnowball ss && target instanceof LargeSnowball ls) {
+            if (!ls.hasSmallOnTop() && !ss.isStacked()) {
+                ss.setStacked(true);
+                ls.setSmallOnTop(true);
+                grid[currentRow][currentCol] = null;
+                anyStacked = true;
+                System.out.println("Stacked!");
+                return true;
+            }
+        }
+
+        // Head placement
+        if (piece instanceof SnowmanHead sh && target instanceof LargeSnowball ls) {
+            if (ls.hasSmallOnTop() && !ls.hasHeadOnTop()) {
+                sh.setPlaced(true);
+                ls.setHasHeadOnTop(true);
+                grid[currentRow][currentCol] = null;
+                System.out.println("Snowman head placed!");
+                return true;
+            }
         }
 
         int stopRow = nextRow - dRow;
@@ -72,24 +109,31 @@ public class GameBoard {
     }
 
     public void checkStacking() {
-        anyStacked = true;
-        System.out.println("Stacked!");
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
+
                 Piece piece = grid[row][col];
-                if (piece instanceof SmallSnowball && !((SmallSnowball) piece).isStacked()) {
-                    int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-                    for (int[] dir : directions) {
-                        int adjRow = row + dir[0];
-                        int adjCol = col + dir[1];
-                        if (isValid(adjRow, adjCol)) {
-                            Piece adjacent = grid[adjRow][adjCol];
-                            if (adjacent instanceof LargeSnowball && !((LargeSnowball) adjacent).hasSmallOnTop()) {
-                                ((SmallSnowball) piece).setStacked(true);
-                                ((LargeSnowball) adjacent).setSmallOnTop(true);
-                                grid[row][col] = null;
-                                System.out.println("Stacked!");
-                            }
+
+                if (piece instanceof SmallSnowball ss && !ss.isStacked()) {
+
+                    int[][] dirs = {{-1,0},{1,0},{0,-1},{0,1}};
+
+                    for (int[] d : dirs) {
+                        int r = row + d[0];
+                        int c = col + d[1];
+
+                        if (!isValid(r, c)) continue;
+
+                        Piece adj = grid[r][c];
+
+                        if (adj instanceof LargeSnowball ls && !ls.hasSmallOnTop()) {
+                            ss.setStacked(true);
+                            ls.setSmallOnTop(true);
+                            grid[row][col] = null;
+
+                            anyStacked = true;
+                            System.out.println("Stacked!");
+                            return;
                         }
                     }
                 }
@@ -100,19 +144,31 @@ public class GameBoard {
     public void checkHeadPlacement() {
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
+
                 Piece piece = grid[row][col];
-                if (piece instanceof SnowmanHead && !((SnowmanHead) piece).isPlaced()) {
-                    int[][] directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
-                    for (int[] dir : directions) {
-                        int adjRow = row + dir[0];
-                        int adjCol = col + dir[1];
-                        if (isValid(adjRow, adjCol)) {
-                            Piece adjacent = grid[adjRow][adjCol];
-                            if (adjacent instanceof LargeSnowball && ((LargeSnowball) adjacent).hasSmallOnTop()) {
-                                ((SnowmanHead) piece).setPlaced(true);
-                                grid[row][col] = null;
-                                System.out.println("Snowman head placed!");
-                            }
+
+                if (piece instanceof SnowmanHead sh && !sh.isPlaced()) {
+
+                    int[][] dirs = {{-1,0},{1,0},{0,-1},{0,1}};
+
+                    for (int[] d : dirs) {
+                        int r = row + d[0];
+                        int c = col + d[1];
+
+                        if (!isValid(r, c)) continue;
+
+                        Piece adj = grid[r][c];
+
+                        if (adj instanceof LargeSnowball ls
+                                && ls.hasSmallOnTop()
+                                && !ls.hasHeadOnTop()) {
+
+                            sh.setPlaced(true);
+                            ls.setHasHeadOnTop(true);
+                            grid[row][col] = null;
+
+                            System.out.println("Snowman head placed!");
+                            return;
                         }
                     }
                 }
@@ -122,12 +178,13 @@ public class GameBoard {
 
     public boolean checkWin() {
         if (!anyStacked) return false;
-        for (int row = 0; row < ROWS; row++) {
-            for (int col = 0; col < COLS; col++) {
-                Piece piece = grid[row][col];
-                if (piece instanceof SmallSnowball) return false;
-                if (piece instanceof SnowmanHead) return false;
-                if (piece instanceof LargeSnowball && !((LargeSnowball) piece).hasSmallOnTop()) return false;
+
+        for (int r = 0; r < ROWS; r++) {
+            for (int c = 0; c < COLS; c++) {
+                Piece p = grid[r][c];
+
+                if (p instanceof SmallSnowball) return false;
+                if (p instanceof SnowmanHead) return false;
             }
         }
         return true;

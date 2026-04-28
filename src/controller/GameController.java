@@ -12,7 +12,7 @@ public class GameController {
         board = new GameBoard();
         selectedPiece = null;
         gameOver = false;
-        loadLevel(1);
+        loadLevel(63);
     }
 
     private void loadLevel(int levelNumber) {
@@ -26,7 +26,9 @@ public class GameController {
 
         if (selectedPiece == null) {
             Piece clicked = board.getPiece(row, col);
-            if (clicked != null && clicked.getType() != PieceType.TREE) {
+            if (clicked != null
+                    && clicked.getType() != PieceType.TREE
+                    && clicked.getType() != PieceType.SNOWMAN_HEAD) {
                 selectedPiece = clicked;
                 System.out.println("Selected: " + clicked.getType() + " at " + row + "," + col);
             }
@@ -44,10 +46,13 @@ public class GameController {
 
             System.out.println("Moving: dRow" + dRow + " dCol=" + dCol);
             boolean survived = board.movePiece(selectedPiece, dRow, dCol);
-            System.out.println("Checking stacking...");
+
             board.checkStacking();
             board.checkHeadPlacement();
-            System.out.println("Win check: " + board.checkWin());
+            board.checkStacking();
+
+            boolean win = board.checkWin();
+            System.out.println("Win check: " + win);
 
             System.out.println("survived=" + survived + " win=" + board.checkWin());
             if (board.checkWin()) {

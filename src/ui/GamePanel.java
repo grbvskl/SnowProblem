@@ -79,16 +79,27 @@ public class GamePanel extends JPanel {
 
         // draw stacked snowball differently
         if (piece instanceof LargeSnowball && ((LargeSnowball) piece).hasSmallOnTop()) {
+            // large snowball always drawn
             g2d.setColor(new Color(200, 230, 255));
             g2d.fillOval(x + padding, y + padding, TILE_SIZE - padding * 2, TILE_SIZE - padding * 2);
             g2d.setColor(Color.DARK_GRAY);
             g2d.drawOval(x + padding, y + padding, TILE_SIZE - padding * 2, TILE_SIZE - padding * 2);
+            // small snowball always drawn on top
             g2d.setColor(Color.WHITE);
             g2d.fillOval(x + padding + 10, y + padding + 10, TILE_SIZE - padding * 2 - 20, TILE_SIZE - padding * 2 - 20);
             g2d.setColor(Color.DARK_GRAY);
             g2d.drawOval(x + padding + 10, y + padding + 10, TILE_SIZE - padding * 2 - 20, TILE_SIZE - padding * 2 - 20);
-            g2d.setColor(Color.BLACK);
-            g2d.drawString("ST", x + TILE_SIZE / 2 - 8, y + TILE_SIZE / 2 + 5);
+            // head only drawn if complete
+            if (((LargeSnowball) piece).hasHeadOnTop()) {
+                g2d.setColor(new Color(255, 200, 100));
+                g2d.fillOval(x + padding + 18, y + padding + 18, TILE_SIZE - padding * 2 - 36, TILE_SIZE - padding * 2 - 36);
+                g2d.setColor(Color.DARK_GRAY);
+                g2d.drawOval(x + padding + 18, y + padding + 18, TILE_SIZE - padding * 2 - 36, TILE_SIZE - padding * 2 - 36);
+                g2d.drawString("WIN", x + TILE_SIZE / 2 - 10, y + TILE_SIZE / 2 + 5);
+            } else {
+                g2d.setColor(Color.BLACK);
+                g2d.drawString("ST", x + TILE_SIZE / 2 - 8, y + TILE_SIZE / 2 + 5);
+            }
             return;
         }
 
