@@ -51,12 +51,31 @@ public class GameController {
 
         if (selectedPiece == null) {
             Piece clicked = board.getPiece(row, col);
-            if (clicked != null
-                    && clicked.getType() != PieceType.TREE
-                    && clicked.getType() != PieceType.SNOWMAN_HEAD) {
+            if (clicked == null) return;
+
+            if (clicked.getType() != PieceType.TREE && clicked.getType() != PieceType.SNOWMAN_HEAD) {
                 selectedPiece = clicked;
             }
+
         } else {
+            Piece target = board.getPiece(row, col);
+
+            if (selectedPiece instanceof SmallSnowball ss && !ss.isStacked()
+                    && target instanceof LargeSnowball ls && !ls.hasSmallOnTop()) {
+                if (board.tryStack(selectedPiece.getRow(), selectedPiece.getCol(), row, col)) {
+                    moveCount++;
+                    board.checkHeadPlacement();
+                    if (board.checkWin()) {
+                        gameOver = true;
+                        scoreManager.submitScore(currentLevel, moveCount);
+                        JOptionPane.showMessageDialog(null,
+                                "You win!\nMoves: " + moveCount + "\nBest: " + scoreManager.getBestScore(currentLevel));
+                    }
+                    selectedPiece = null;
+                    return;
+                }
+            }
+            
             int dRow = row - selectedPiece.getRow();
             int dCol = col - selectedPiece.getCol();
 
@@ -70,17 +89,13 @@ public class GameController {
 
             boolean survived = board.movePiece(selectedPiece, dRow, dCol);
             moveCount++;
-
-            board.checkStacking();
             board.checkHeadPlacement();
-            board.checkStacking();
 
             if (board.checkWin()) {
                 gameOver = true;
                 scoreManager.submitScore(currentLevel, moveCount);
-                int best = scoreManager.getBestScore(currentLevel);
                 JOptionPane.showMessageDialog(null,
-                        "You win!\nMoves: " + moveCount + "\nBest: " + best);
+                        "You win!\nMoves: " + moveCount + "\nBest: " + scoreManager.getBestScore(currentLevel));
             } else if (!survived) {
                 gameOver = true;
                 JOptionPane.showMessageDialog(null, "Game Over! A piece fell off the board!");
@@ -88,6 +103,7 @@ public class GameController {
 
             selectedPiece = null;
         }
+
     }
 
     public GameBoard getBoard() { return board; }

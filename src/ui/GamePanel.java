@@ -4,6 +4,7 @@ import controller.GameController;
 import model.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.RenderingHints;
 
 import javax.swing.JPanel;
 import java.awt.Graphics;
@@ -121,6 +122,7 @@ public class GamePanel extends JPanel {
         g2d.setColor(Color.DARK_GRAY);
         g2d.drawOval(x + padding, y + padding, TILE_SIZE - padding * 2, TILE_SIZE - padding * 2);
         g2d.setColor(Color.BLACK);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         String label;
         switch (piece.getType()) {
             case SMALL_SNOWBALL: label = "SS"; break;
