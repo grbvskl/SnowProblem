@@ -17,7 +17,10 @@ public class GamePanel extends JPanel {
 
     private GameController controller;
 
-    public GamePanel(GameController controller) {
+    private GameWindow window;
+
+    public GamePanel(GameController controller, GameWindow window) {
+        this.window = window;
         this.controller = controller;
         setPreferredSize(new java.awt.Dimension(COLS * TILE_SIZE, ROWS * TILE_SIZE));
         setBackground(Color.WHITE);
@@ -28,6 +31,7 @@ public class GamePanel extends JPanel {
                 int col = e.getX() / TILE_SIZE;
                 int row = e.getY() / TILE_SIZE;
                 controller.handleClick(row, col);
+                window.updateMoveCount(controller.getMoveCount());
                 repaint();
             }
         });
@@ -71,25 +75,20 @@ public class GamePanel extends JPanel {
         int y = row * TILE_SIZE;
         int padding = 10;
 
-        // highlight selected piece with yellow background
         if (piece == controller.getSelectedPiece()) {
             g2d.setColor(Color.YELLOW);
             g2d.fillRect(x, y, TILE_SIZE, TILE_SIZE);
         }
 
-        // draw stacked snowball differently
         if (piece instanceof LargeSnowball && ((LargeSnowball) piece).hasSmallOnTop()) {
-            // large snowball always drawn
             g2d.setColor(new Color(200, 230, 255));
             g2d.fillOval(x + padding, y + padding, TILE_SIZE - padding * 2, TILE_SIZE - padding * 2);
             g2d.setColor(Color.DARK_GRAY);
             g2d.drawOval(x + padding, y + padding, TILE_SIZE - padding * 2, TILE_SIZE - padding * 2);
-            // small snowball always drawn on top
             g2d.setColor(Color.WHITE);
             g2d.fillOval(x + padding + 10, y + padding + 10, TILE_SIZE - padding * 2 - 20, TILE_SIZE - padding * 2 - 20);
             g2d.setColor(Color.DARK_GRAY);
             g2d.drawOval(x + padding + 10, y + padding + 10, TILE_SIZE - padding * 2 - 20, TILE_SIZE - padding * 2 - 20);
-            // head only drawn if complete
             if (((LargeSnowball) piece).hasHeadOnTop()) {
                 g2d.setColor(new Color(255, 200, 100));
                 g2d.fillOval(x + padding + 18, y + padding + 18, TILE_SIZE - padding * 2 - 36, TILE_SIZE - padding * 2 - 36);

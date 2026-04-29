@@ -7,21 +7,46 @@ public class GameController {
     private GameBoard board;
     private Piece selectedPiece;
     private boolean gameOver;
+    private int moveCount;
+    private int currentLevel;
+    private ScoreManager scoreManager;
 
     public GameController() {
         board = new GameBoard();
         selectedPiece = null;
         gameOver = false;
-        loadLevel(63);
+        currentLevel = 1;
+        loadLevel(currentLevel);
+        moveCount = 0;
+        scoreManager = new ScoreManager();
     }
 
-    private void loadLevel(int levelNumber) {
+    public void resetLevel() {
+        moveCount = 0;
+        gameOver = false;
+        selectedPiece = null;
+        loadLevel(currentLevel);
+    }
+
+    public void Level(int levelNumber) {
+        currentLevel = levelNumber;
+        moveCount = 0;
+        gameOver = false;
+        selectedPiece = null;
+        Level level = LevelManager.getLevel(currentLevel);
+        board.loadLevel(level);
+    }
+
+    public void loadLevel(int levelNumber) {
+        currentLevel = levelNumber;
+        moveCount = 0;
+        gameOver = false;
+        selectedPiece = null;
         Level level = LevelManager.getLevel(levelNumber);
         board.loadLevel(level);
     }
 
     public void handleClick(int row, int col) {
-        System.out.println("Clicked at row " + row + " and col " + col);
         if (gameOver) return;
 
         if (selectedPiece == null) {
@@ -30,7 +55,6 @@ public class GameController {
                     && clicked.getType() != PieceType.TREE
                     && clicked.getType() != PieceType.SNOWMAN_HEAD) {
                 selectedPiece = clicked;
-                System.out.println("Selected: " + clicked.getType() + " at " + row + "," + col);
             }
         } else {
             int dRow = row - selectedPiece.getRow();
@@ -44,20 +68,19 @@ public class GameController {
             if (dRow != 0) dRow = dRow / Math.abs(dRow);
             if (dCol != 0) dCol = dCol / Math.abs(dCol);
 
-            System.out.println("Moving: dRow" + dRow + " dCol=" + dCol);
             boolean survived = board.movePiece(selectedPiece, dRow, dCol);
+            moveCount++;
 
             board.checkStacking();
             board.checkHeadPlacement();
             board.checkStacking();
 
-            boolean win = board.checkWin();
-            System.out.println("Win check: " + win);
-
-            System.out.println("survived=" + survived + " win=" + board.checkWin());
             if (board.checkWin()) {
                 gameOver = true;
-                JOptionPane.showMessageDialog(null, "You win! All snowmen complete!");
+                scoreManager.submitScore(currentLevel, moveCount);
+                int best = scoreManager.getBestScore(currentLevel);
+                JOptionPane.showMessageDialog(null,
+                        "You win!\nMoves: " + moveCount + "\nBest: " + best);
             } else if (!survived) {
                 gameOver = true;
                 JOptionPane.showMessageDialog(null, "Game Over! A piece fell off the board!");
@@ -70,4 +93,7 @@ public class GameController {
     public GameBoard getBoard() { return board; }
     public Piece getSelectedPiece() { return selectedPiece; }
     public boolean isGameOver() { return gameOver; }
+    public int getMoveCount() { return moveCount; }
+    public int getBestScore(int level) { return scoreManager.getBestScore(level); }
+    public int getCurrentLevel() { return currentLevel; }
 }

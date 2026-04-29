@@ -72,7 +72,6 @@ public class GameBoard {
 
         Piece target = grid[nextRow][nextCol];
 
-        // Small to Large stacking
         if (piece instanceof SmallSnowball ss && target instanceof LargeSnowball ls) {
             if (!ls.hasSmallOnTop() && !ss.isStacked()) {
                 ss.setStacked(true);
@@ -84,7 +83,6 @@ public class GameBoard {
             }
         }
 
-        // Head placement
         if (piece instanceof SnowmanHead sh && target instanceof LargeSnowball ls) {
             if (ls.hasSmallOnTop() && !ls.hasHeadOnTop()) {
                 sh.setPlaced(true);
