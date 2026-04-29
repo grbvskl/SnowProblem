@@ -268,7 +268,7 @@ public class LevelManager {
                 new SmallSnowball(0, 4),
                 new SnowmanHead(1, 4),
                 new LargeSnowball(2, 0),
-                new Tree(3, 3)
+                new Tree(3, 2)
         };
         return new Level(15, pieces);
     }

@@ -4,27 +4,43 @@ import controller.GameController;
 import model.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.RenderingHints;
-
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Color;
+import java.awt.RenderingHints;
 
+//drawing game board, rendering pieces, handling mouse input
 public class GamePanel extends JPanel {
     private static final int COLS = 5;
     private static final int ROWS = 4;
     private static final int TILE_SIZE = 80;
 
     private GameController controller;
-
     private GameWindow window;
 
+    private BufferedImage imgLargeSnowball;
+    private BufferedImage imgSmallSnowball;
+    private BufferedImage imgTree;
+    private BufferedImage imgHeadBlue;
+    private BufferedImage imgHeadRed;
+    private BufferedImage imgHeadYellow;
+    private BufferedImage imgSnowmanStack;
+    private BufferedImage imgSnowmanBlue;
+    private BufferedImage imgSnowmanRed;
+    private BufferedImage imgSnowmanYellow;
+    private BufferedImage imgHole;
+
     public GamePanel(GameController controller, GameWindow window) {
-        this.window = window;
         this.controller = controller;
+        this.window = window;
         setPreferredSize(new java.awt.Dimension(COLS * TILE_SIZE, ROWS * TILE_SIZE));
         setBackground(Color.WHITE);
+        loadImages();
 
         addMouseListener(new MouseAdapter() {
             @Override
@@ -38,10 +54,31 @@ public class GamePanel extends JPanel {
         });
     }
 
+    private void loadImages() {
+        System.out.println("Looking for assets in: " + new File("assets").getAbsolutePath());
+        try {
+            imgLargeSnowball = ImageIO.read(new File("assets/snowball_large.png"));
+            imgSmallSnowball = ImageIO.read(new File("assets/snowball_small.png"));
+            imgTree          = ImageIO.read(new File("assets/tree.png"));
+            imgHeadBlue      = ImageIO.read(new File("assets/head_blue.png"));
+            imgHeadRed       = ImageIO.read(new File("assets/head_red.png"));
+            imgHeadYellow    = ImageIO.read(new File("assets/head_yellow.png"));
+            imgSnowmanStack  = ImageIO.read(new File("assets/snowman_stack.png"));
+            imgSnowmanBlue   = ImageIO.read(new File("assets/snowman_blue.png"));
+            imgSnowmanRed    = ImageIO.read(new File("assets/snowman_red.png"));
+            imgSnowmanYellow = ImageIO.read(new File("assets/snowman_yellow.png"));
+            imgHole          = ImageIO.read(new File("assets/hole.png"));
+        } catch (IOException e) {
+            System.out.println("Could not load images: " + e.getMessage());
+        }
+    }
+
+    //rendering method
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         drawGrid(g2d);
         drawPieces(g2d);
     }
@@ -51,9 +88,9 @@ public class GamePanel extends JPanel {
             for (int col = 0; col < COLS; col++) {
                 int x = col * TILE_SIZE;
                 int y = row * TILE_SIZE;
-                g2d.setColor(Color.LIGHT_GRAY);
+                g2d.setColor(new Color(220, 235, 255));
                 g2d.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                g2d.setColor(Color.DARK_GRAY);
+                g2d.setColor(new Color(180, 200, 230));
                 g2d.drawRect(x, y, TILE_SIZE, TILE_SIZE);
             }
         }
@@ -74,63 +111,49 @@ public class GamePanel extends JPanel {
     private void drawPiece(Graphics2D g2d, Piece piece, int row, int col) {
         int x = col * TILE_SIZE;
         int y = row * TILE_SIZE;
-        int padding = 10;
+        int padding = 4;
 
+        //highlight selected piece
         if (piece == controller.getSelectedPiece()) {
-            g2d.setColor(Color.YELLOW);
+            g2d.setColor(new Color(255, 230, 0, 150));
             g2d.fillRect(x, y, TILE_SIZE, TILE_SIZE);
         }
 
-        if (piece instanceof LargeSnowball && ((LargeSnowball) piece).hasSmallOnTop()) {
-            g2d.setColor(new Color(200, 230, 255));
-            g2d.fillOval(x + padding, y + padding, TILE_SIZE - padding * 2, TILE_SIZE - padding * 2);
-            g2d.setColor(Color.DARK_GRAY);
-            g2d.drawOval(x + padding, y + padding, TILE_SIZE - padding * 2, TILE_SIZE - padding * 2);
-            g2d.setColor(Color.WHITE);
-            g2d.fillOval(x + padding + 10, y + padding + 10, TILE_SIZE - padding * 2 - 20, TILE_SIZE - padding * 2 - 20);
-            g2d.setColor(Color.DARK_GRAY);
-            g2d.drawOval(x + padding + 10, y + padding + 10, TILE_SIZE - padding * 2 - 20, TILE_SIZE - padding * 2 - 20);
-            if (((LargeSnowball) piece).hasHeadOnTop()) {
-                g2d.setColor(new Color(255, 200, 100));
-                g2d.fillOval(x + padding + 18, y + padding + 18, TILE_SIZE - padding * 2 - 36, TILE_SIZE - padding * 2 - 36);
-                g2d.setColor(Color.DARK_GRAY);
-                g2d.drawOval(x + padding + 18, y + padding + 18, TILE_SIZE - padding * 2 - 36, TILE_SIZE - padding * 2 - 36);
-                g2d.drawString("WIN", x + TILE_SIZE / 2 - 10, y + TILE_SIZE / 2 + 5);
+        BufferedImage img = null;
+
+        //choose image
+        if (piece instanceof LargeSnowball ls) {
+            if (ls.hasHeadOnTop()) {
+                img = getSnowmanImage(ls);
+            } else if (ls.hasSmallOnTop()) {
+                img = imgSnowmanStack;
             } else {
-                g2d.setColor(Color.BLACK);
-                g2d.drawString("ST", x + TILE_SIZE / 2 - 8, y + TILE_SIZE / 2 + 5);
+                img = imgLargeSnowball;
             }
-            return;
+        } else if (piece instanceof SmallSnowball) {
+            img = imgSmallSnowball;
+        } else if (piece instanceof Tree) {
+            img = imgTree;
+        } else if (piece instanceof SnowmanHead) {
+            img = getHeadImage(piece);
         }
 
-        switch (piece.getType()) {
-            case TREE:
-                g2d.setColor(new Color(34, 139, 34));
-                break;
-            case LARGE_SNOWBALL:
-                g2d.setColor(new Color(200, 230, 255));
-                break;
-            case SMALL_SNOWBALL:
-                g2d.setColor(Color.WHITE);
-                break;
-            case SNOWMAN_HEAD:
-                g2d.setColor(new Color(255, 200, 100));
-                break;
+        if (img != null) {
+            g2d.drawImage(img, x + padding, y + padding, TILE_SIZE - padding * 2, TILE_SIZE - padding * 2, null);
         }
+    }
 
-        g2d.fillOval(x + padding, y + padding, TILE_SIZE - padding * 2, TILE_SIZE - padding * 2);
-        g2d.setColor(Color.DARK_GRAY);
-        g2d.drawOval(x + padding, y + padding, TILE_SIZE - padding * 2, TILE_SIZE - padding * 2);
-        g2d.setColor(Color.BLACK);
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        String label;
-        switch (piece.getType()) {
-            case SMALL_SNOWBALL: label = "SS"; break;
-            case LARGE_SNOWBALL: label = "LS"; break;
-            case SNOWMAN_HEAD:   label = "SH"; break;
-            case TREE:           label = "TR"; break;
-            default:             label = "??"; break;
-        }
-        g2d.drawString(label, x + TILE_SIZE / 2 - 8, y + TILE_SIZE / 2 + 5);
+    private BufferedImage getHeadImage(Piece piece) {
+        int id = System.identityHashCode(piece) % 3;
+        if (id == 0) return imgHeadBlue;
+        if (id == 1) return imgHeadRed;
+        return imgHeadYellow;
+    }
+
+    private BufferedImage getSnowmanImage(LargeSnowball ls) {
+        int id = System.identityHashCode(ls) % 3;
+        if (id == 0) return imgSnowmanBlue;
+        if (id == 1) return imgSnowmanRed;
+        return imgSnowmanYellow;
     }
 }

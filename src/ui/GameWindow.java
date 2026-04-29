@@ -7,7 +7,7 @@ import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import java.awt.BorderLayout;
-
+//handles user interface elements
 public class GameWindow extends JFrame {
     private JLabel moveLabel;
     private GameController controller;
@@ -97,6 +97,7 @@ public class GameWindow extends JFrame {
         add(topBar, BorderLayout.NORTH);
         add(bottomBar, BorderLayout.SOUTH);
         add(panel, BorderLayout.CENTER);
+        //window size fit components
         pack();
         setLocationRelativeTo(null);
     }

@@ -2,7 +2,7 @@ package controller;
 
 import model.*;
 import javax.swing.JOptionPane;
-
+// Controls game logic and interactions between UI and model
 public class GameController {
     private GameBoard board;
     private Piece selectedPiece;
@@ -11,6 +11,7 @@ public class GameController {
     private int currentLevel;
     private ScoreManager scoreManager;
 
+    //constructor to initialize the game
     public GameController() {
         board = new GameBoard();
         selectedPiece = null;
@@ -37,11 +38,13 @@ public class GameController {
         board.loadLevel(level);
     }
 
+    //loads a specific level
     public void loadLevel(int levelNumber) {
         currentLevel = levelNumber;
         moveCount = 0;
         gameOver = false;
         selectedPiece = null;
+        // get level data and load into board
         Level level = LevelManager.getLevel(levelNumber);
         board.loadLevel(level);
     }
@@ -51,6 +54,7 @@ public class GameController {
 
         if (selectedPiece == null) {
             Piece clicked = board.getPiece(row, col);
+            //ignore empty tile
             if (clicked == null) return;
 
             if (clicked.getType() != PieceType.TREE && clicked.getType() != PieceType.SNOWMAN_HEAD) {
@@ -64,6 +68,7 @@ public class GameController {
                     && target instanceof LargeSnowball ls && !ls.hasSmallOnTop()) {
                 if (board.tryStack(selectedPiece.getRow(), selectedPiece.getCol(), row, col)) {
                     moveCount++;
+                    //check if head can be placed now
                     board.checkHeadPlacement();
                     if (board.checkWin()) {
                         gameOver = true;
@@ -79,6 +84,7 @@ public class GameController {
             int dRow = row - selectedPiece.getRow();
             int dCol = col - selectedPiece.getCol();
 
+            //prevent diagonal movement
             if (dRow != 0 && dCol != 0) {
                 selectedPiece = null;
                 return;
@@ -106,6 +112,7 @@ public class GameController {
 
     }
 
+    //getters for ui
     public GameBoard getBoard() { return board; }
     public Piece getSelectedPiece() { return selectedPiece; }
     public boolean isGameOver() { return gameOver; }

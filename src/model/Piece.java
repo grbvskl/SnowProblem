@@ -15,6 +15,7 @@ public abstract class Piece {
     public int getCol() {return col; }
     public PieceType getType() { return type; }
 
+    //update row and col positions
     public void setRow(int row) { this.row = row; }
     public void setCol(int col) { this.col = col; }
 }
